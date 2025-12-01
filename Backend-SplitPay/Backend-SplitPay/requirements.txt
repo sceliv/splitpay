@@ -4,11 +4,9 @@ python-dotenv
 sqlalchemy
 pymysql
 pydantic
-jwt
+PyJWT
 passlib
 bcrypt
 email-validator
 python-multipart
 python-dateutil
-python-email-validator
-python-email-validator 
