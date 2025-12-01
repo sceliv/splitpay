@@ -1,12 +1,13 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 sqlalchemy
 pymysql
 pydantic
 PyJWT
-passlib
+passlib[bcrypt]
 bcrypt
 email-validator
 python-multipart
 python-dateutil
+python-jose[cryptography]
