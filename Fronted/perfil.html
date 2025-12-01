@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Perfil</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2979FF",
+            accent: "#A394FF"
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body class="font-display bg-slate-50 min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-md w-full max-w-lg p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-xl font-bold text-slate-900">Mi perfil financiero</h1>
+      <a href="dashboard.html" class="text-sm text-primary hover:underline">
+        Volver al dashboard
+      </a>
+    </div>
+
+    <div class="flex items-center gap-4 mb-6">
+      <div class="w-14 h-14 rounded-full bg-slate-300"></div>
+      <div>
+        <p id="user-name" class="text-lg font-semibold text-slate-900">Usuario</p>
+        <p id="user-email" class="text-sm text-slate-500">email@example.com</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-slate-50 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Pagos a tiempo</p>
+        <p class="text-2xl font-bold text-green-600 mt-1">92%</p>
+      </div>
+      <div class="bg-slate-50 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Grupos activos</p>
+        <p class="text-2xl font-bold text-slate-900 mt-1">3</p>
+      </div>
+    </div>
+
+    <div class="bg-slate-50 rounded-xl p-4 mb-4">
+      <p class="text-sm font-semibold text-slate-800 mb-1">Nivel de confianza</p>
+      <p class="text-sm text-slate-600 mb-2">
+        Has cumplido con la mayoría de tus pagos en los últimos meses. Tu nivel de confiabilidad es alto dentro de tus grupos.
+      </p>
+      <div class="w-full bg-slate-200 rounded-full h-2">
+        <div class="h-2 bg-primary rounded-full" style="width: 85%;"></div>
+      </div>
+      <p class="text-xs text-right text-slate-500 mt-1">85/100</p>
+    </div>
+
+    <div class="flex justify-end">
+      <a href="dashboard.html">
+        <button
+          type="button"
+          class="px-4 h-10 rounded-md border border-slate-300 text-sm text-slate-700 hover:bg-slate-100"
+        >
+          Cerrar
+        </button>
+      </a>
+    </div>
+
+    <p id="profile-error" class="mt-4 text-sm text-red-500 hidden">
+      No se pudo cargar la información de tu perfil.
+    </p>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function getToken() {
+      return localStorage.getItem("splitpay_token");
+    }
+
+    function requireAuth() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "index.html";
+      }
+      return token;
+    }
+
+    function decodeUserIdFromToken(token) {
+      try {
+        const [, payload] = token.split(".");
+        const json = atob(payload);
+        const data = JSON.parse(json);
+        return parseInt(data.sub, 10);
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadProfile() {
+      const token = requireAuth();
+      const userId = decodeUserIdFromToken(token);
+      const nameEl = document.getElementById("user-name");
+      const emailEl = document.getElementById("user-email");
+      const errorEl = document.getElementById("profile-error");
+
+      if (!userId) {
+        errorEl.textContent = "No se pudo identificar al usuario actual.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!resp.ok) {
+          errorEl.classList.remove("hidden");
+          return;
+        }
+
+        const user = await resp.json();
+        nameEl.textContent = user.name;
+        emailEl.textContent = user.email;
+      } catch (err) {
+        console.error(err);
+        errorEl.classList.remove("hidden");
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

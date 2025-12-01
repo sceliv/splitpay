@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Agregar gasto</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2979FF"
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body class="font-display bg-slate-50 min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-xl shadow-md w-full max-w-lg p-6">
+    <h1 class="text-2xl font-semibold text-slate-900 mb-4 text-center">
+      Agregar nuevo gasto
+    </h1>
+
+    <form id="expense-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
+        <input
+          type="text"
+          id="description"
+          placeholder="Ej. Cena del viernes"
+          class="w-full h-11 rounded-md border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Monto</label>
+        <input
+          type="number"
+          step="0.01"
+          id="amount"
+          placeholder="0.00"
+          class="w-full h-11 rounded-md border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+
+      <p class="text-xs text-slate-500">
+        El gasto se registrará a tu nombre (usuario actual).
+      </p>
+
+      <!-- BOTONES -->
+      <div class="flex justify-end gap-3 pt-4">
+        <a id="cancel-link" href="grupo.html">
+          <button
+            type="button"
+            class="px-4 h-10 rounded-md border border-slate-300 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Cancelar
+          </button>
+        </a>
+        <button
+          id="save-expense"
+          type="submit"
+          class="px-4 h-10 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary/90"
+        >
+          Guardar gasto
+        </button>
+      </div>
+
+      <p id="expense-error" class="text-sm text-red-500 pt-1 hidden">
+        No se pudo guardar el gasto. Inténtalo de nuevo.
+      </p>
+    </form>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function getToken() {
+      return localStorage.getItem("splitpay_token");
+    }
+
+    function requireAuth() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "index.html";
+      }
+      return token;
+    }
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function decodeUserIdFromToken(token) {
+      try {
+        const [, payload] = token.split(".");
+        const json = atob(payload);
+        const data = JSON.parse(json);
+        return parseInt(data.sub, 10);
+      } catch {
+        return null;
+      }
+    }
+
+    const form = document.getElementById("expense-form");
+    const descInput = document.getElementById("description");
+    const amountInput = document.getElementById("amount");
+    const errorText = document.getElementById("expense-error");
+    const cancelLink = document.getElementById("cancel-link");
+
+    const groupId = getQueryParam("groupId");
+    if (groupId) {
+      cancelLink.href = `grupo.html?groupId=${groupId}`;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorText.classList.add("hidden");
+
+      const token = requireAuth();
+      if (!groupId) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      const description = descInput.value.trim();
+      const amount = parseFloat(amountInput.value);
+
+      if (!description || isNaN(amount) || amount <= 0) {
+        errorText.textContent = "Introduce una descripción y un monto válido.";
+        errorText.classList.remove("hidden");
+        return;
+      }
+
+      const userId = decodeUserIdFromToken(token);
+      if (!userId) {
+        errorText.textContent = "No se pudo identificar al usuario actual.";
+        errorText.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/expenses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount,
+            description,
+            user_id: userId,
+            group_id: parseInt(groupId, 10),
+          }),
+        });
+
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => null);
+          errorText.textContent = body?.detail || "No se pudo guardar el gasto.";
+          errorText.classList.remove("hidden");
+          return;
+        }
+
+        window.location.href = `grupo.html?groupId=${groupId}`;
+      } catch (err) {
+        console.error(err);
+        errorText.textContent = "No se pudo conectar con el servidor.";
+        errorText.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>

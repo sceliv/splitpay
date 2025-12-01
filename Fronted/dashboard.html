@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2979FF",
+            "background-light": "#F7F9FB",
+            "background-dark": "#160f23"
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body class="font-display bg-background-light min-h-screen">
+  <div class="min-h-screen flex flex-col">
+    <!-- HEADER -->
+    <header class="flex items-center justify-between h-16 px-6 bg-white shadow-sm">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold">
+          S
+        </div>
+        <span class="font-bold text-lg text-slate-900">SplitPay</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="perfil.html" class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+          <span class="hidden sm:inline text-sm font-medium text-slate-800">Mi perfil</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main class="flex-1 px-6 py-6 max-w-6xl mx-auto w-full">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Mis grupos</h1>
+          <p class="text-sm text-slate-500">
+            Organiza tus gastos compartidos en un solo lugar.
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <!-- CREAR GRUPO -->
+          <a href="crear_grupo.html">
+            <button
+              type="button"
+              class="px-4 h-10 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary/90"
+            >
+              Crear nuevo grupo
+            </button>
+          </a>
+        </div>
+      </div>
+
+      <!-- GRID DE GRUPOS (dinámico desde backend) -->
+      <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Se rellena vía JS -->
+      </div>
+
+      <p id="groups-empty" class="mt-6 text-sm text-slate-500 hidden">
+        Aún no tienes grupos creados. Crea el primero con el botón de arriba.
+      </p>
+
+      <p id="groups-error" class="mt-4 text-sm text-red-500 hidden">
+        No se pudieron cargar los grupos. Intenta recargar la página.
+      </p>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000"; // ajusta si tu backend corre en otra URL
+
+    const groupsGrid = document.getElementById("groups-grid");
+    const groupsEmpty = document.getElementById("groups-empty");
+    const groupsError = document.getElementById("groups-error");
+
+    function getToken() {
+      return localStorage.getItem("splitpay_token");
+    }
+
+    function requireAuth() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "index.html";
+      }
+      return token;
+    }
+
+    function createGroupCard(group) {
+      const card = document.createElement("div");
+      card.className = "bg-white rounded-xl shadow-sm p-5 flex flex-col gap-3";
+
+      const title = document.createElement("h3");
+      title.className = "text-lg font-semibold text-slate-900";
+      title.textContent = group.name;
+
+      const meta = document.createElement("p");
+      meta.className = "text-sm text-slate-500";
+      meta.textContent = `Miembros: ${group.members?.length ?? 0}`;
+
+      const buttonWrapper = document.createElement("div");
+      buttonWrapper.className = "mt-2";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className =
+        "w-full h-10 rounded-md border border-primary/60 text-primary text-sm font-semibold hover:bg-primary/10";
+      button.textContent = "Ver grupo";
+      button.addEventListener("click", () => {
+        window.location.href = `grupo.html?groupId=${group.id}`;
+      });
+
+      buttonWrapper.appendChild(button);
+
+      card.appendChild(title);
+      card.appendChild(meta);
+      card.appendChild(buttonWrapper);
+
+      return card;
+    }
+
+    async function loadGroups() {
+      const token = requireAuth();
+      try {
+        const resp = await fetch(`${API_BASE}/groups`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!resp.ok) {
+          groupsError.classList.remove("hidden");
+          return;
+        }
+
+        const groups = await resp.json();
+
+        groupsGrid.innerHTML = "";
+        if (!groups.length) {
+          groupsEmpty.classList.remove("hidden");
+          return;
+        }
+
+        groups.forEach((g) => {
+          groupsGrid.appendChild(createGroupCard(g));
+        });
+      } catch (err) {
+        console.error(err);
+        groupsError.classList.remove("hidden");
+      }
+    }
+
+    loadGroups();
+  </script>
+</body>
+</html>

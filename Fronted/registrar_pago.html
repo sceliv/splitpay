@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Registrar Pago</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F7F9FB;
+      color: #2B2B2B;
+    }
+    .btn-primary {
+      background-color: #2979FF;
+      color: #FFFFFF;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+    .btn-primary:hover {
+      background-color: #1a62cc;
+    }
+    .btn-secondary {
+      background-color: #FFFFFF;
+      color: #2B2B2B;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 500;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .btn-secondary:hover {
+      background-color: #F0F2F5;
+      border-color: #D1D5DB;
+    }
+    .card {
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 24px;
+    }
+    .input-field {
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      padding: 10px 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #2979FF;
+      box-shadow: 0 0 0 3px rgba(41, 121, 255, 0.2);
+    }
+    .select-field {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 0.8em;
+      padding-right: 2.5rem;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen px-4">
+  <div class="card w-full max-w-lg mx-auto">
+    <h1 class="text-2xl font-semibold mb-6 text-center">Registrar pago</h1>
+
+    <form id="payment-form" class="space-y-4 mb-6">
+      <p class="text-xs text-gray-600">
+        El pago se registrará como realizado por ti hacia otro miembro del grupo.
+      </p>
+
+      <div>
+        <label for="receiver-id" class="block text-sm font-medium mb-1">ID del usuario que recibe el pago</label>
+        <input
+          type="number"
+          id="receiver-id"
+          placeholder="Ej. 2"
+          class="input-field"
+        />
+        <p class="text-xs text-gray-500 mt-1">
+          En este MVP usa el ID numérico del usuario (por ejemplo, 1, 2, 3).
+        </p>
+      </div>
+
+      <div>
+        <label for="amount" class="block text-sm font-medium mb-1">Monto</label>
+        <input
+          type="number"
+          step="0.01"
+          id="amount"
+          placeholder="Ej. 25.00"
+          class="input-field"
+        />
+      </div>
+
+      <div>
+        <label for="payment-method" class="block text-sm font-medium mb-1">Método de pago (solo informativo)</label>
+        <select id="payment-method" class="input-field select-field">
+          <option value="">Selecciona método</option>
+          <option value="yape">Yape</option>
+          <option value="plin">Plin</option>
+          <option value="cash">Efectivo</option>
+          <option value="other">Otro</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="payment-date" class="block text-sm font-medium mb-1">Fecha del pago (solo informativo)</label>
+        <input
+          type="date"
+          id="payment-date"
+          class="input-field"
+        />
+      </div>
+
+      <p id="payment-error" class="text-sm text-red-500 pt-1 hidden">
+        No se pudo registrar el pago. Inténtalo de nuevo.
+      </p>
+    </form>
+
+    <div class="flex justify-end space-x-3 mt-8">
+      <!-- VOLVER AL GRUPO -->
+      <a id="back-link" href="grupo.html">
+        <button type="button" class="btn-secondary">Volver</button>
+      </a>
+      <button id="submit-payment" type="submit" form="payment-form" class="btn-primary">
+        Registrar pago
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function getToken() {
+      return localStorage.getItem("splitpay_token");
+    }
+
+    function requireAuth() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "index.html";
+      }
+      return token;
+    }
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function decodeUserIdFromToken(token) {
+      try {
+        const [, payload] = token.split(".");
+        const json = atob(payload);
+        const data = JSON.parse(json);
+        return parseInt(data.sub, 10);
+      } catch {
+        return null;
+      }
+    }
+
+    const form = document.getElementById("payment-form");
+    const receiverInput = document.getElementById("receiver-id");
+    const amountInput = document.getElementById("amount");
+    const errorText = document.getElementById("payment-error");
+    const backLink = document.getElementById("back-link");
+
+    const groupId = getQueryParam("groupId");
+    if (groupId) {
+      backLink.href = `grupo.html?groupId=${groupId}`;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorText.classList.add("hidden");
+
+      const token = requireAuth();
+      if (!groupId) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      const toUser = parseInt(receiverInput.value, 10);
+      const amount = parseFloat(amountInput.value);
+
+      if (isNaN(toUser) || toUser <= 0 || isNaN(amount) || amount <= 0) {
+        errorText.textContent = "Introduce un ID de receptor y un monto válido.";
+        errorText.classList.remove("hidden");
+        return;
+      }
+
+      const fromUser = decodeUserIdFromToken(token);
+      if (!fromUser) {
+        errorText.textContent = "No se pudo identificar al usuario actual.";
+        errorText.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/settlements`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount,
+            group_id: parseInt(groupId, 10),
+            from_user: fromUser,
+            to_user: toUser,
+            evidence_url: null,
+          }),
+        });
+
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => null);
+          errorText.textContent = body?.detail || "No se pudo registrar el pago.";
+          errorText.classList.remove("hidden");
+          return;
+        }
+
+        window.location.href = `grupo.html?groupId=${groupId}`;
+      } catch (err) {
+        console.error(err);
+        errorText.textContent = "No se pudo conectar con el servidor.";
+        errorText.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>

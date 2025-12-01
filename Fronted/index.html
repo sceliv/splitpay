@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Autenticación</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Tailwind config -->
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2979FF",
+            "background-light": "#F7F9FB",
+            "background-dark": "#160f23",
+            "text-primary-light": "#1A202C",
+            "text-primary-dark": "#FFFFFF",
+            "text-secondary-light": "#718096",
+            "text-secondary-dark": "#A0AEC0",
+            "card-light": "#FFFFFF",
+            "card-dark": "#1A202C",
+            "border-light": "#E2E8F0",
+            "border-dark": "#2D3748"
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Material Icons -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+    }
+  </style>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark">
+  <div class="flex min-h-screen w-full items-center justify-center px-4">
+    <div class="w-full max-w-md rounded-2xl bg-card-light dark:bg-card-dark shadow-md p-8">
+      <!-- Logo / título -->
+      <div class="flex flex-col items-center pb-4">
+        <h2 class="text-3xl font-bold text-text-primary-light dark:text-text-primary-dark">
+          SplitPay
+        </h2>
+        <p class="mt-1 text-sm text-text-secondary-light dark:text-text-secondary-dark">
+          Gestiona tus gastos compartidos con tu grupo.
+        </p>
+      </div>
+
+      <!-- Tabs Login / Registro -->
+      <div class="flex mt-4 mb-6 border-b border-border-light dark:border-border-dark">
+        <button
+          id="tab-login"
+          class="flex-1 py-2 text-sm font-semibold text-center border-b-2 border-primary text-primary"
+        >
+          Iniciar sesión
+        </button>
+        <button
+          id="tab-register"
+          class="flex-1 py-2 text-sm font-semibold text-center border-b-2 border-transparent text-text-secondary-light"
+        >
+          Crear cuenta
+        </button>
+      </div>
+
+      <!-- LOGIN -->
+      <form id="login-form" class="flex flex-col gap-4 w-full">
+        <label class="flex flex-col">
+          <span class="text-sm font-medium pb-2 text-text-primary-light dark:text-text-primary-dark">
+            Correo electrónico
+          </span>
+          <input
+            type="email"
+            id="login-email"
+            placeholder="tu@email.com"
+            class="h-12 px-4 rounded border border-border-light dark:border-border-dark
+                   bg-card-light dark:bg-card-dark text-text-primary-light dark:text-text-primary-dark
+                   focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </label>
+
+        <label class="flex flex-col">
+          <span class="text-sm font-medium pb-2 text-text-primary-light dark:text-text-primary-dark">
+            Contraseña
+          </span>
+          <div class="flex items-center rounded border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark">
+            <input
+              type="password"
+              id="login-password"
+              placeholder="Introduce tu contraseña"
+              class="h-12 px-4 w-full rounded-l bg-transparent text-text-primary-light dark:text-text-primary-dark
+                     focus:outline-none"
+            />
+            <button type="button" id="toggle-login-password" class="px-4 text-text-secondary-light dark:text-text-secondary-dark">
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+          </div>
+        </label>
+
+        <button
+          id="login-button"
+          type="submit"
+          class="mt-2 h-12 w-full bg-primary text-white font-bold rounded
+                 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50"
+        >
+          Entrar
+        </button>
+
+        <p id="login-error" class="text-sm text-red-500 pt-1 hidden">
+          Error al iniciar sesión. Revisa tu correo y contraseña.
+        </p>
+      </form>
+
+      <!-- REGISTRO -->
+      <form id="register-form" class="mt-2 flex flex-col gap-4 w-full hidden">
+        <label class="flex flex-col">
+          <span class="text-sm font-medium pb-2 text-text-primary-light dark:text-text-primary-dark">
+            Nombre
+          </span>
+          <input
+            type="text"
+            id="register-name"
+            placeholder="Tu nombre"
+            class="h-12 px-4 rounded border border-border-light dark:border-border-dark
+                   bg-card-light dark:bg-card-dark text-text-primary-light dark:text-text-primary-dark
+                   focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </label>
+
+        <label class="flex flex-col">
+          <span class="text-sm font-medium pb-2 text-text-primary-light dark:text-text-primary-dark">
+            Correo electrónico
+          </span>
+          <input
+            type="email"
+            id="register-email"
+            placeholder="tu@email.com"
+            class="h-12 px-4 rounded border border-border-light dark:border-border-dark
+                   bg-card-light dark:bg-card-dark text-text-primary-light dark:text-text-primary-dark
+                   focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </label>
+
+        <label class="flex flex-col">
+          <span class="text-sm font-medium pb-2 text-text-primary-light dark:text-text-primary-dark">
+            Contraseña
+          </span>
+          <div class="flex items-center rounded border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark">
+            <input
+              type="password"
+              id="register-password"
+              placeholder="Crea una contraseña segura"
+              class="h-12 px-4 w-full rounded-l bg-transparent text-text-primary-light dark:text-text-primary-dark
+                     focus:outline-none"
+            />
+            <button type="button" id="toggle-register-password" class="px-4 text-text-secondary-light dark:text-text-secondary-dark">
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+          </div>
+        </label>
+
+        <button
+          id="register-button"
+          type="submit"
+          class="mt-2 h-12 w-full bg-primary text-white font-bold rounded
+                 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50"
+        >
+          Crear cuenta
+        </button>
+
+        <p id="register-error" class="text-sm text-red-500 pt-1 hidden">
+          No se pudo crear la cuenta. Revisa los datos o inténtalo más tarde.
+        </p>
+        <p id="register-success" class="text-sm text-green-600 pt-1 hidden">
+          Cuenta creada correctamente. Hemos iniciado sesión por ti.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";; // ajusta si tu backend corre en otra URL
+
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+
+    const loginEmail = document.getElementById("login-email");
+    const loginPassword = document.getElementById("login-password");
+    const loginError = document.getElementById("login-error");
+
+    const registerName = document.getElementById("register-name");
+    const registerEmail = document.getElementById("register-email");
+    const registerPassword = document.getElementById("register-password");
+    const registerError = document.getElementById("register-error");
+    const registerSuccess = document.getElementById("register-success");
+
+    const toggleLoginPassword = document.getElementById("toggle-login-password");
+    const toggleRegisterPassword = document.getElementById("toggle-register-password");
+
+    function setActiveTab(tab) {
+      if (tab === "login") {
+        tabLogin.classList.add("border-primary", "text-primary");
+        tabLogin.classList.remove("text-text-secondary-light");
+        tabRegister.classList.remove("border-primary", "text-primary");
+        tabRegister.classList.add("text-text-secondary-light");
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+      } else {
+        tabRegister.classList.add("border-primary", "text-primary");
+        tabRegister.classList.remove("text-text-secondary-light");
+        tabLogin.classList.remove("border-primary", "text-primary");
+        tabLogin.classList.add("text-text-secondary-light");
+        registerForm.classList.remove("hidden");
+        loginForm.classList.add("hidden");
+      }
+    }
+
+    tabLogin.addEventListener("click", () => setActiveTab("login"));
+    tabRegister.addEventListener("click", () => setActiveTab("register"));
+
+    function togglePasswordVisibility(inputEl, iconButton) {
+      const isPassword = inputEl.type === "password";
+      inputEl.type = isPassword ? "text" : "password";
+      iconButton.querySelector(".material-symbols-outlined").textContent = isPassword ? "visibility_off" : "visibility";
+    }
+
+    toggleLoginPassword.addEventListener("click", () =>
+      togglePasswordVisibility(loginPassword, toggleLoginPassword)
+    );
+    toggleRegisterPassword.addEventListener("click", () =>
+      togglePasswordVisibility(registerPassword, toggleRegisterPassword)
+    );
+
+    // LOGIN
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.classList.add("hidden");
+
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value.trim();
+
+      if (!email || !password) {
+        loginError.textContent = "Introduce correo y contraseña.";
+        loginError.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!resp.ok) {
+          loginError.textContent = "Credenciales inválidas.";
+          loginError.classList.remove("hidden");
+          return;
+        }
+
+        const data = await resp.json();
+        localStorage.setItem("splitpay_token", data.access_token);
+
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        console.error(err);
+        loginError.textContent = "No se pudo conectar con el servidor.";
+        loginError.classList.remove("hidden");
+      }
+    });
+
+    // REGISTRO
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      registerError.classList.add("hidden");
+      registerSuccess.classList.add("hidden");
+
+      const name = registerName.value.trim();
+      const email = registerEmail.value.trim();
+      const password = registerPassword.value.trim();
+
+      if (!name || !email || !password) {
+        registerError.textContent = "Completa nombre, correo y contraseña.";
+        registerError.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        if (!resp.ok) {
+          const errorBody = await resp.json().catch(() => null);
+          const msg = errorBody?.detail || "No se pudo crear la cuenta.";
+          registerError.textContent = msg;
+          registerError.classList.remove("hidden");
+          return;
+        }
+
+        // Registro correcto: hacemos login automático
+        const loginResp = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (loginResp.ok) {
+          const data = await loginResp.json();
+          localStorage.setItem("splitpay_token", data.access_token);
+          registerSuccess.classList.remove("hidden");
+          window.location.href = "dashboard.html";
+        } else {
+          registerSuccess.textContent = "Cuenta creada. Inicia sesión con tus credenciales.";
+          registerSuccess.classList.remove("hidden");
+          setActiveTab("login");
+        }
+      } catch (err) {
+        console.error(err);
+        registerError.textContent = "No se pudo conectar con el servidor.";
+        registerError.classList.remove("hidden");
+      }
+    });
+
+    // Por defecto mostramos la pestaña de login
+    setActiveTab("login");
+  </script>
+</body>
+</html>

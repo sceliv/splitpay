@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitPay - Detalle del grupo</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2979FF",
+            accent: "#A394FF",
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="font-display bg-slate-50 min-h-screen">
+  <div class="min-h-screen flex flex-col">
+    <!-- HEADER -->
+    <header class="flex justify-between items-center h-16 px-6 bg-white shadow-sm">
+      <div class="flex items-center gap-2">
+        <a href="dashboard.html" class="text-sm text-primary hover:underline">&larr; Volver</a>
+        <span id="group-name" class="font-bold text-lg text-slate-900">Grupo</span>
+      </div>
+      <a href="perfil.html" class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+        <span class="hidden sm:inline text-sm font-medium text-slate-800">
+          Mi perfil
+        </span>
+      </a>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main class="flex-1 px-6 py-6 max-w-6xl mx-auto w-full flex flex-col gap-6">
+
+      <!-- Resumen -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl shadow-sm p-4 col-span-1 md:col-span-2">
+          <p class="text-xs text-slate-500 uppercase font-semibold">Resumen del grupo</p>
+          <p id="group-summary" class="text-sm text-slate-700 mt-1">
+            Cargando información del grupo...
+          </p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <p class="text-xs text-slate-500 uppercase font-semibold">Mi saldo estimado</p>
+          <p id="my-balance" class="text-2xl font-bold text-slate-900 mt-1">S/ 0.00</p>
+        </div>
+      </section>
+
+      <!-- ACCIONES -->
+      <section class="flex flex-wrap gap-3">
+        <a id="link-nuevo-gasto" href="#">
+          <button
+            type="button"
+            class="px-4 h-10 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary/90"
+          >
+            Agregar gasto
+          </button>
+        </a>
+
+        <a id="link-registrar-pago" href="#">
+          <button
+            type="button"
+            class="px-4 h-10 rounded-md border border-primary/70 text-primary text-sm font-semibold hover:bg-primary/10"
+          >
+            Registrar pago
+          </button>
+        </a>
+
+        <!-- BOTÓN AÑADIR MIEMBRO -->
+        <button
+          id="btn-add-member"
+          type="button"
+          class="px-4 h-10 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+        >
+          Añadir miembro
+        </button>
+      </section>
+
+      <!-- Tabla de gastos -->
+      <section class="bg-white rounded-xl shadow-sm p-4">
+        <h2 class="text-lg font-semibold text-slate-900 mb-3">Gastos del grupo</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="border-b text-slate-500">
+              <tr>
+                <th class="py-2 text-left">Descripción</th>
+                <th class="py-2 text-left">Pagado por</th>
+                <th class="py-2 text-right">Monto</th>
+                <th class="py-2 text-right">Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-body" class="divide-y"></tbody>
+          </table>
+        </div>
+        <p id="expenses-empty" class="mt-2 text-sm text-slate-500 hidden">
+          Aún no hay gastos registrados en este grupo.
+        </p>
+      </section>
+
+      <!-- Compensaciones -->
+      <section class="bg-white rounded-xl shadow-sm p-4">
+        <h2 class="text-lg font-semibold text-slate-900 mb-3">Quién debe a quién</h2>
+        <ul id="compensation-list" class="space-y-2 text-sm"></ul>
+        <p id="compensation-empty" class="mt-2 text-sm text-slate-500 hidden">
+          Aún no hay compensaciones calculadas para este grupo.
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL AÑADIR MIEMBRO -->
+  <div id="modal-add-member" class="fixed inset-0 bg-black/40 hidden items-center justify-center">
+    <div class="bg-white p-6 rounded-xl shadow-lg w-80 space-y-4">
+      <h2 class="text-lg font-semibold text-slate-900">Añadir miembro</h2>
+
+      <div>
+        <label class="text-sm text-slate-700">Correo del miembro</label>
+        <input
+          id="member-email"
+          type="email"
+          class="mt-1 w-full border rounded-md px-3 py-2 text-sm"
+          placeholder="email@example.com"
+        />
+      </div>
+
+      <div>
+        <label class="text-sm text-slate-700">Rol</label>
+        <select
+          id="member-role"
+          class="mt-1 w-full border rounded-md px-3 py-2 text-sm"
+        >
+          <option value="member">Miembro</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+
+      <p id="add-member-error" class="text-sm text-red-600 hidden"></p>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btn-close-modal" class="px-3 py-1 border rounded-md text-sm">Cancelar</button>
+        <button id="btn-confirm-add" class="px-3 py-1 bg-primary text-white rounded-md text-sm">
+          Añadir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function getToken() {
+      return localStorage.getItem("splitpay_token");
+    }
+
+    function requireAuth() {
+      const token = getToken();
+      if (!token) window.location.href = "index.html";
+      return token;
+    }
+
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function decodeUserIdFromToken(token) {
+      try {
+        const [, payload] = token.split(".");
+        return parseInt(JSON.parse(atob(payload)).sub, 10);
+      } catch {
+        return null;
+      }
+    }
+
+    // MODAL LÓGICA
+    const modal = document.getElementById("modal-add-member");
+    const btnAddMember = document.getElementById("btn-add-member");
+    const btnCloseModal = document.getElementById("btn-close-modal");
+    const btnConfirmAdd = document.getElementById("btn-confirm-add");
+    const errorLabel = document.getElementById("add-member-error");
+
+    btnAddMember.onclick = () => {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    };
+
+    btnCloseModal.onclick = () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      errorLabel.classList.add("hidden");
+    };
+
+    async function addMember() {
+      const token = requireAuth();
+      const groupId = getQueryParam("groupId");
+
+      const email = document.getElementById("member-email").value.trim();
+      const role = document.getElementById("member-role").value;
+
+      if (!email) {
+        errorLabel.textContent = "Ingresa un correo válido.";
+        errorLabel.classList.remove("hidden");
+        return;
+      }
+
+      const resp = await fetch(`${API_BASE}/groups/${groupId}/add-member`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, role }),
+      });
+
+      if (resp.ok) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        errorLabel.classList.add("hidden");
+        loadGroup();
+      } else {
+        const err = await resp.json();
+        errorLabel.textContent = err.detail || "No se pudo añadir al miembro.";
+        errorLabel.classList.remove("hidden");
+      }
+    }
+
+    btnConfirmAdd.onclick = addMember;
+
+    // Cargar datos del grupo
+    async function loadGroup() {
+      const token = requireAuth();
+      const groupId = getQueryParam("groupId");
+      const currentUserId = decodeUserIdFromToken(token);
+
+      const groupNameEl = document.getElementById("group-name");
+      const groupSummaryEl = document.getElementById("group-summary");
+      const expensesBody = document.getElementById("expenses-body");
+      const expensesEmpty = document.getElementById("expenses-empty");
+      const compList = document.getElementById("compensation-list");
+      const compEmpty = document.getElementById("compensation-empty");
+      const myBalanceEl = document.getElementById("my-balance");
+
+      document.getElementById("link-nuevo-gasto").href = `nuevo_gasto.html?groupId=${groupId}`;
+      document.getElementById("link-registrar-pago").href = `registrar_pago.html?groupId=${groupId}`;
+
+      try {
+        // Información del grupo
+        const groupResp = await fetch(`${API_BASE}/groups/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (groupResp.ok) {
+          const group = await groupResp.json();
+          groupNameEl.textContent = group.name;
+          groupSummaryEl.textContent = `Miembros en el grupo: ${group.members.length}`;
+        } else {
+          groupSummaryEl.textContent = "No se pudo cargar la información del grupo.";
+        }
+
+        // Gastos
+        const expensesResp = await fetch(`${API_BASE}/expenses/group/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (expensesResp.ok) {
+          const expenses = await expensesResp.json();
+          expensesBody.innerHTML = "";
+
+          if (!expenses.length) {
+            expensesEmpty.classList.remove("hidden");
+          } else {
+            expenses.forEach((e) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td class="py-2">${e.description}</td>
+                <td class="py-2">Usuario #${e.user_id}</td>
+                <td class="py-2 text-right">S/ ${e.amount.toFixed(2)}</td>
+                <td class="py-2 text-right">${new Date(e.created_at).toLocaleDateString()}</td>
+              `;
+              expensesBody.appendChild(tr);
+            });
+          }
+        }
+
+        // Compensaciones
+        const compResp = await fetch(`${API_BASE}/compensation/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (compResp.ok) {
+          const compensations = await compResp.json();
+          compList.innerHTML = "";
+
+          if (!compensations.length) {
+            compEmpty.classList.remove("hidden");
+          } else {
+            let myBalance = 0;
+
+            compensations.forEach((c) => {
+              const li = document.createElement("li");
+              li.className = "flex justify-between";
+              li.innerHTML = `
+                <span>Usuario #${c.payer_id} debe pagar a Usuario #${c.receiver_id}:</span>
+                <span class="font-semibold text-slate-900">
+                  S/ ${c.amount.toFixed(2)}
+                </span>
+              `;
+              compList.appendChild(li);
+
+              if (currentUserId) {
+                if (c.payer_id === currentUserId) myBalance -= c.amount;
+                if (c.receiver_id === currentUserId) myBalance += c.amount;
+              }
+            });
+
+            myBalanceEl.textContent = `S/ ${myBalance.toFixed(2)}`;
+          }
+        }
+      } catch {
+        groupSummaryEl.textContent = "Error al cargar los datos del grupo.";
+      }
+    }
+
+    loadGroup();
+  </script>
+</body>
+</html>
